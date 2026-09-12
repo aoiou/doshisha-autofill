@@ -507,6 +507,63 @@ body {
   gap: 8px;
 }
 
+/* Options Subgroup (パスワードレス設定者向け枠) */
+.options-subgroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.subgroup-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.subgroup-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.subgroup-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--badge-text);
+  flex-shrink: 0;
+}
+
+.subgroup-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--badge-text);
+  letter-spacing: -0.1px;
+}
+
+.subgroup-hint {
+  font-size: 10px;
+  color: var(--text-hint);
+  line-height: 1.35;
+}
+
+.subgroup-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.options-subgroup .option-item {
+  background: var(--bg-card);
+  padding: 8px 10px;
+}
+
 .option-item {
   position: relative;
   background: var(--bg-option);
