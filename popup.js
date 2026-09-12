@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const autoPasswordTabToggle = document.getElementById('auto-password-tab-toggle');
   const themeToggle = document.getElementById('theme-toggle');
   const targetDomainLink = document.getElementById('target-domain-link');
+  const versionText = document.getElementById('version-text');
 
   let feedbackTimeout = null;
   let debounceTimeout = null;
@@ -87,6 +88,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       clearBtn.classList.add('visible');
     } else {
       clearBtn.classList.remove('visible');
+    }
+  }
+
+  // バージョン番号の動的反映 (manifest.json から取得)
+  function renderVersion() {
+    if (!versionText) return;
+    try {
+      const manifest = chrome.runtime?.getManifest?.();
+      if (manifest && manifest.version) {
+        versionText.textContent = `v${manifest.version}`;
+      } else {
+        versionText.textContent = '';
+      }
+    } catch (err) {
+      console.warn('Failed to load version from manifest:', err);
+      versionText.textContent = '';
     }
   }
 
@@ -251,6 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // 初期ロード
+  renderVersion();
   await loadSettings();
   usernameInput.focus();
 });
