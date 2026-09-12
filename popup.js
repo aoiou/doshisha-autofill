@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveIndicator = document.getElementById('save-indicator');
   const autoSubmitToggle = document.getElementById('auto-submit-toggle');
   const autoFido2Toggle = document.getElementById('auto-fido2-toggle');
+  const autoPasswordTabToggle = document.getElementById('auto-password-tab-toggle');
   const themeToggle = document.getElementById('theme-toggle');
   const targetDomainLink = document.getElementById('target-domain-link');
 
@@ -19,7 +20,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let lastSavedState = {
     username: '',
     autoSubmit: false,
-    autoFido2: false
+    autoFido2: false,
+    autoPasswordTab: false
   };
 
   // テーマ管理
@@ -91,35 +93,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ストレージから設定を取得
   async function loadSettings() {
     try {
-      const res = await chrome.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'theme']);
+      const res = await chrome.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
       if (res.theme) {
         applyTheme(res.theme);
       }
       const username = res.savedUsername || '';
       const autoSubmit = !!res.autoSubmit;
       const autoFido2 = !!res.autoFido2;
+      const autoPasswordTab = !!res.autoPasswordTab;
 
       usernameInput.value = username;
       autoSubmitToggle.checked = autoSubmit;
       autoFido2Toggle.checked = autoFido2;
+      autoPasswordTabToggle.checked = autoPasswordTab;
 
-      lastSavedState = { username, autoSubmit, autoFido2 };
+      lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
       updateClearButton();
     } catch (e) {
       try {
-        const localRes = await chrome.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'theme']);
+        const localRes = await chrome.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
         if (localRes.theme) {
           applyTheme(localRes.theme);
         }
         const username = localRes.savedUsername || '';
         const autoSubmit = !!localRes.autoSubmit;
         const autoFido2 = !!localRes.autoFido2;
+        const autoPasswordTab = !!localRes.autoPasswordTab;
 
         usernameInput.value = username;
         autoSubmitToggle.checked = autoSubmit;
         autoFido2Toggle.checked = autoFido2;
+        autoPasswordTabToggle.checked = autoPasswordTab;
 
-        lastSavedState = { username, autoSubmit, autoFido2 };
+        lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
         updateClearButton();
       } catch (err) {
         console.error('Failed to load storage:', err);
@@ -137,17 +143,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const username = usernameInput.value.trim();
     const autoSubmit = autoSubmitToggle.checked;
     const autoFido2 = autoFido2Toggle.checked;
+    const autoPasswordTab = autoPasswordTabToggle.checked;
 
     // 前回の保存内容と同一なら無駄な書き込みをスキップ
     const isUsernameChanged = username !== lastSavedState.username;
-    const isOptionsChanged = autoSubmit !== lastSavedState.autoSubmit || autoFido2 !== lastSavedState.autoFido2;
+    const isOptionsChanged =
+      autoSubmit !== lastSavedState.autoSubmit ||
+      autoFido2 !== lastSavedState.autoFido2 ||
+      autoPasswordTab !== lastSavedState.autoPasswordTab;
 
     if (!isUsernameChanged && !isOptionsChanged) {
       return;
     }
 
-    const settings = { savedUsername: username, autoSubmit, autoFido2 };
-    lastSavedState = { username, autoSubmit, autoFido2 };
+    const settings = { savedUsername: username, autoSubmit, autoFido2, autoPasswordTab };
+    lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
 
     try {
       await chrome.storage.sync.set(settings);
@@ -208,10 +218,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     triggerOptionPulse(autoSubmitToggle);
   });
 
-  // 6. 「パスワードレス認証」トグル：即時保存 ＆ 非言語パルス
+  // 6. 「パスワードレス認証」トグル：即時保存 ＆ 非言語パルス（パスワードタブ自動選択がONならOFFにする）
   autoFido2Toggle.addEventListener('change', () => {
+    if (autoFido2Toggle.checked && autoPasswordTabToggle.checked) {
+      autoPasswordTabToggle.checked = false;
+      triggerOptionPulse(autoPasswordTabToggle);
+    }
     saveSettings({ showFeedback: false });
     triggerOptionPulse(autoFido2Toggle);
+  });
+
+  // 6-2. 「パスワード」タブ自動選択トグル：即時保存 ＆ 非言語パルス（パスワードレス自動開始がONならOFFにする）
+  autoPasswordTabToggle.addEventListener('change', () => {
+    if (autoPasswordTabToggle.checked && autoFido2Toggle.checked) {
+      autoFido2Toggle.checked = false;
+      triggerOptionPulse(autoFido2Toggle);
+    }
+    saveSettings({ showFeedback: false });
+    triggerOptionPulse(autoPasswordTabToggle);
   });
 
   // 7. 外観テーマ切り替え（ライト / ダーク）
