@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 入力停止検知（デバウンス保存: 1500ms）
+  // 入力停止検知（デバウンス保存: 1000ms）
   function triggerDebouncedSave() {
     updateClearButton();
     if (debounceTimeout) {
@@ -199,12 +199,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     debounceTimeout = setTimeout(() => {
       saveSettings({ showFeedback: true });
-    }, 1500);
+    }, 1000);
   }
 
   // イベントリスナー登録
 
-  // 1. 入力中：クリアボタン表示切替 ＆ デバウンス保存（1500ms）
+  // 1. 入力中：クリアボタン表示切替 ＆ デバウンス保存（1000ms）
   usernameInput.addEventListener('input', triggerDebouncedSave);
 
   // 2. フォーカスが外れた時（blur）：即時保存
