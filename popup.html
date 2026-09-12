@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doshisha Autofill</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">D</div>
+        <div class="brand-text">
+          <h1 class="title">Doshisha Autofill</h1>
+          <span class="subtitle">ログイン自動化</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="badge" title="対象ドメイン">doshisha.ex-tic.com</span>
+        <button type="button" id="theme-toggle" class="theme-toggle" title="外観テーマ切り替え" aria-label="外観テーマ切り替え">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="form-group">
+        <label for="username-input" class="form-label">
+          自動入力するユーザー名
+          <span class="required-dot" aria-hidden="true">•</span>
+        </label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input
+            type="text"
+            id="username-input"
+            class="form-input"
+            placeholder="ユーザー名を入力"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <div class="input-actions">
+            <span id="save-indicator" class="save-indicator" title="自動保存完了" aria-label="自動保存完了">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <button type="button" id="clear-btn" class="clear-btn" title="入力をクリア" aria-label="入力をクリア">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p class="form-hint">
+          ログイン画面を開いた際に「ユーザー名」欄へ自動で入力されます。
+        </p>
+      </div>
+
+      <!-- Options Group -->
+      <div class="options-group">
+        <div class="option-item">
+          <label class="toggle-label" for="auto-submit-toggle">
+            <div class="toggle-text">
+              <span class="option-title">自動で「次へ」に進む</span>
+              <span class="option-desc">入力後に「次へ」ボタンを自動クリック</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" id="auto-submit-toggle">
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+
+        <div class="option-item">
+          <label class="toggle-label" for="auto-fido2-toggle">
+            <div class="toggle-text">
+              <span class="option-title">パスワードレス認証を自動開始</span>
+              <span class="option-desc">画面表示時に「パスワードレス認証」を自動クリック</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" id="auto-fido2-toggle">
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="target-link">対象: <code>auth/session</code></span>
+      <span class="version">v1.0.0</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

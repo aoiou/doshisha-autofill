@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Doshisha Autofill",
+  "version": "1.0.0",
+  "description": "doshisha.ex-tic.com のログイン画面でユーザー名の自動入力や認証フローを自動化します。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Doshisha Autofill"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://doshisha.ex-tic.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
