@@ -20,6 +20,18 @@
   "permissions": [
     "storage"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-login-page": {
+      "suggested_key": {
+        "default": "Alt+Shift+D",
+        "mac": "Alt+Shift+D"
+      },
+      "description": "同志社ログイン画面を開く"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
