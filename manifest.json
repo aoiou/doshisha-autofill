@@ -23,7 +23,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://doshisha.ex-tic.com/*"
+        "https://doshisha.ex-tic.com/auth/*"
       ],
       "js": [
         "content.js"

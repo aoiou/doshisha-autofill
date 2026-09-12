@@ -6,6 +6,11 @@
 (() => {
   'use strict';
 
+  // /auth/* 以外のページでは実行しない（念のための二重チェック）
+  if (!window.location.pathname.startsWith('/auth/')) {
+    return;
+  }
+
   // ターゲットとなるセレクタ（ログインフォーム内の可視テキスト入力欄）
   const TARGET_SELECTOR = 'form#login input#identifier[type="text"]';
   const SUBMIT_BUTTON_SELECTOR = 'form#login button[type="submit"]';

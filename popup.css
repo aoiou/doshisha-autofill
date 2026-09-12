@@ -251,15 +251,46 @@ body {
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 10px;
   font-weight: 500;
   color: var(--badge-text);
   background: var(--badge-bg);
   border: 1px solid var(--badge-border);
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 9999px;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badge:hover {
+  color: var(--text-main);
+  background: var(--badge-border);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.badge:active {
+  transform: translateY(0);
+}
+
+.badge .external-icon {
+  width: 10px;
+  height: 10px;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.badge:hover .external-icon {
+  opacity: 1;
+  transform: translate(0.5px, -0.5px);
 }
 
 .theme-toggle {

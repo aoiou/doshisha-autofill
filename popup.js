@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const autoSubmitToggle = document.getElementById('auto-submit-toggle');
   const autoFido2Toggle = document.getElementById('auto-fido2-toggle');
   const themeToggle = document.getElementById('theme-toggle');
+  const targetDomainLink = document.getElementById('target-domain-link');
 
   let feedbackTimeout = null;
   let debounceTimeout = null;
@@ -215,6 +216,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 7. 外観テーマ切り替え（ライト / ダーク）
   themeToggle.addEventListener('click', toggleTheme);
+
+  // 8. 対象ドメインクリック：ログインページを新規タブで開く
+  if (targetDomainLink) {
+    targetDomainLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetUrl = targetDomainLink.href || 'https://doshisha.ex-tic.com/auth/session';
+      chrome.tabs.create({ url: targetUrl });
+    });
+  }
 
   // 初期ロード
   await loadSettings();
