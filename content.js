@@ -26,7 +26,7 @@
       autoPasswordTab: false
     };
     try {
-      const result = await chrome.storage.sync.get([
+      const result = await browser.storage.sync.get([
         'savedUsername',
         'autoSubmit',
         'autoFido2',
@@ -41,7 +41,7 @@
     } catch (e) {
       // syncが使えない場合はlocalにフォールバック
       try {
-        const localResult = await chrome.storage.local.get([
+        const localResult = await browser.storage.local.get([
           'savedUsername',
           'autoSubmit',
           'autoFido2',

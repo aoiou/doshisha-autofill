@@ -78,10 +78,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTheme(validSetting);
 
     try {
-      await chrome.storage.sync.set({ theme: validSetting });
+      await browser.storage.sync.set({ theme: validSetting });
     } catch (e) {
       try {
-        await chrome.storage.local.set({ theme: validSetting });
+        await browser.storage.local.set({ theme: validSetting });
       } catch (err) {
         console.error('Failed to save theme:', err);
       }
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderVersion() {
     if (!versionText) return;
     try {
-      const manifest = chrome.runtime?.getManifest?.();
+      const manifest = browser.runtime?.getManifest?.();
       if (manifest && manifest.version) {
         versionText.textContent = `v${manifest.version}`;
       } else {
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ストレージから設定を取得
   async function loadSettings() {
     try {
-      const res = await chrome.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
+      const res = await browser.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
       applyTheme(res.theme || 'system');
       const username = res.savedUsername || '';
       const autoSubmit = !!res.autoSubmit;
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateClearButton();
     } catch (e) {
       try {
-        const localRes = await chrome.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
+        const localRes = await browser.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
         applyTheme(localRes.theme || 'system');
         const username = localRes.savedUsername || '';
         const autoSubmit = !!localRes.autoSubmit;
@@ -227,10 +227,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
 
     try {
-      await chrome.storage.sync.set(settings);
+      await browser.storage.sync.set(settings);
     } catch (e) {
       try {
-        await chrome.storage.local.set(settings);
+        await browser.storage.local.set(settings);
       } catch (err) {
         console.error('Failed to save settings:', err);
       }
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     targetDomainLink.addEventListener('click', (e) => {
       e.preventDefault();
       const targetUrl = targetDomainLink.href || 'https://doshisha.ex-tic.com/auth/session';
-      chrome.tabs.create({ url: targetUrl });
+      browser.tabs.create({ url: targetUrl });
     });
   }
 
