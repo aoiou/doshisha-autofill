@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const autoFido2Toggle = document.getElementById('auto-fido2-toggle');
   const autoPasswordTabToggle = document.getElementById('auto-password-tab-toggle');
   const themeToggle = document.getElementById('theme-toggle');
+  const themeMenu = document.getElementById('theme-menu');
+  const themeMenuItems = document.querySelectorAll('.theme-menu-item');
   const targetDomainLink = document.getElementById('target-domain-link');
   const versionText = document.getElementById('version-text');
 
@@ -25,36 +27,88 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoPasswordTab: false
   };
 
-  // テーマ管理
-  function getEffectiveTheme() {
-    const explicitTheme = document.documentElement.getAttribute('data-theme');
-    if (explicitTheme === 'light' || explicitTheme === 'dark') {
-      return explicitTheme;
-    }
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
+  // テーマ管理 (system: OS連動 / light: ライト / dark: ダーク)
+  let currentThemeSetting = 'system';
 
-  function applyTheme(theme) {
-    if (theme === 'light' || theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', theme);
+  function applyTheme(themeSetting) {
+    const validSetting = (themeSetting === 'light' || themeSetting === 'dark') ? themeSetting : 'system';
+    currentThemeSetting = validSetting;
+
+    // 1. スタイル適用用の data-theme ('light' | 'dark' | 属性なし = OS設定)
+    if (validSetting === 'light' || validSetting === 'dark') {
+      document.documentElement.setAttribute('data-theme', validSetting);
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
+
+    // 2. アイコンおよびメニュー状態表示用の data-theme-setting
+    document.documentElement.setAttribute('data-theme-setting', validSetting);
+
+    // 3. ボタンの title / aria-label 更新
+    updateThemeToggleUI(validSetting);
+
+    // 4. ドロップダウンメニューのアクティブ項目更新
+    updateThemeMenuUI(validSetting);
   }
 
-  async function toggleTheme() {
-    const current = getEffectiveTheme();
-    const nextTheme = current === 'dark' ? 'light' : 'dark';
-    applyTheme(nextTheme);
+  function updateThemeToggleUI(themeSetting) {
+    if (!themeToggle) return;
+    const titles = {
+      system: '外観テーマ: システム設定 (クリックで変更)',
+      light: '外観テーマ: ライト (クリックで変更)',
+      dark: '外観テーマ: ダーク (クリックで変更)'
+    };
+    const title = titles[themeSetting] || titles.system;
+    themeToggle.title = title;
+    themeToggle.setAttribute('aria-label', title);
+  }
+
+  function updateThemeMenuUI(themeSetting) {
+    if (!themeMenuItems) return;
+    themeMenuItems.forEach((item) => {
+      const val = item.getAttribute('data-theme-value');
+      const isActive = val === themeSetting;
+      item.classList.toggle('active', isActive);
+      item.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+
+  async function setTheme(themeSetting) {
+    const validSetting = (themeSetting === 'light' || themeSetting === 'dark') ? themeSetting : 'system';
+    applyTheme(validSetting);
 
     try {
-      await chrome.storage.sync.set({ theme: nextTheme });
+      await chrome.storage.sync.set({ theme: validSetting });
     } catch (e) {
       try {
-        await chrome.storage.local.set({ theme: nextTheme });
+        await chrome.storage.local.set({ theme: validSetting });
       } catch (err) {
         console.error('Failed to save theme:', err);
       }
+    }
+  }
+
+  // テーマドロップダウンメニューの開閉制御
+  function openThemeMenu() {
+    if (!themeMenu || !themeToggle) return;
+    themeMenu.removeAttribute('hidden');
+    themeToggle.setAttribute('aria-expanded', 'true');
+    const activeItem = themeMenu.querySelector('.theme-menu-item.active') || themeMenu.querySelector('.theme-menu-item');
+    activeItem?.focus();
+  }
+
+  function closeThemeMenu() {
+    if (!themeMenu || !themeToggle) return;
+    themeMenu.setAttribute('hidden', '');
+    themeToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleThemeMenu() {
+    if (!themeMenu) return;
+    if (themeMenu.hasAttribute('hidden')) {
+      openThemeMenu();
+    } else {
+      closeThemeMenu();
     }
   }
 
@@ -111,9 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadSettings() {
     try {
       const res = await chrome.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
-      if (res.theme) {
-        applyTheme(res.theme);
-      }
+      applyTheme(res.theme || 'system');
       const username = res.savedUsername || '';
       const autoSubmit = !!res.autoSubmit;
       const autoFido2 = !!res.autoFido2;
@@ -129,9 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       try {
         const localRes = await chrome.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
-        if (localRes.theme) {
-          applyTheme(localRes.theme);
-        }
+        applyTheme(localRes.theme || 'system');
         const username = localRes.savedUsername || '';
         const autoSubmit = !!localRes.autoSubmit;
         const autoFido2 = !!localRes.autoFido2;
@@ -255,8 +305,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     triggerOptionPulse(autoPasswordTabToggle);
   });
 
-  // 7. 外観テーマ切り替え（ライト / ダーク）
-  themeToggle.addEventListener('click', toggleTheme);
+  // 7. 外観テーマ設定（ドロップダウンメニュー操作・切り替え）
+  if (themeToggle) {
+    themeToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleThemeMenu();
+    });
+  }
+
+  themeMenuItems.forEach((item) => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const val = item.getAttribute('data-theme-value');
+      await setTheme(val);
+      closeThemeMenu();
+      themeToggle?.focus();
+    });
+  });
+
+  // メニュー内のキーボード操作（上下矢印キーでの移動）
+  if (themeMenu) {
+    themeMenu.addEventListener('keydown', (e) => {
+      const items = Array.from(themeMenuItems);
+      const currentIndex = items.indexOf(document.activeElement);
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        items[nextIndex]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        items[prevIndex]?.focus();
+      }
+    });
+  }
+
+  // メニュー外クリックで閉じる
+  document.addEventListener('click', (e) => {
+    if (themeMenu && !themeMenu.hasAttribute('hidden')) {
+      if (!themeMenu.contains(e.target) && !themeToggle?.contains(e.target)) {
+        closeThemeMenu();
+      }
+    }
+  });
+
+  // Escapeキーで閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && themeMenu && !themeMenu.hasAttribute('hidden')) {
+      closeThemeMenu();
+      themeToggle?.focus();
+    }
+  });
+
+  // OSテーマ設定変更リスナー（システム設定時のみ動的追従）
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (currentThemeSetting === 'system') {
+      applyTheme('system');
+    }
+  });
 
   // 8. 対象ドメインクリック：ログインページを新規タブで開く
   if (targetDomainLink) {

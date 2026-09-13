@@ -37,6 +37,7 @@
   --toggle-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 
   --shadow-popup: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-menu: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 6px 12px -4px rgba(0, 0, 0, 0.3);
 
   --success: #10b981;
   --success-bg: rgba(16, 185, 129, 0.12);
@@ -85,6 +86,7 @@
     --toggle-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 
     --shadow-popup: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    --shadow-menu: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.08);
 
     --success: #059669;
     --success-bg: rgba(16, 185, 129, 0.12);
@@ -125,6 +127,7 @@
   --toggle-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 
   --shadow-popup: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-menu: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.08);
 
   --success: #059669;
   --success-bg: rgba(16, 185, 129, 0.12);
@@ -164,6 +167,7 @@
   --toggle-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 
   --shadow-popup: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-menu: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 6px 12px -4px rgba(0, 0, 0, 0.3);
 
   --success: #10b981;
   --success-bg: rgba(16, 185, 129, 0.12);
@@ -293,6 +297,10 @@ body {
   transform: translate(0.5px, -0.5px);
 }
 
+.theme-menu-wrapper {
+  position: relative;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -308,47 +316,134 @@ body {
   outline: none;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.theme-toggle[aria-expanded="true"] {
   color: var(--text-main);
   background: var(--bg-hover-subtle);
   border-color: var(--border-hover);
 }
 
-.theme-toggle svg {
+.theme-toggle .theme-icon {
   width: 13px;
   height: 13px;
-  display: block;
-}
-
-/* アイコン表示切り替え */
-.theme-toggle .sun-icon {
-  display: block;
-}
-.theme-toggle .moon-icon {
   display: none;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .theme-toggle .sun-icon {
-    display: none;
+/* 設定に応じたボタンアイコンの表示 */
+:root:not([data-theme-setting]) .theme-toggle .system-icon,
+:root[data-theme-setting="system"] .theme-toggle .system-icon {
+  display: block;
+}
+
+:root[data-theme-setting="light"] .theme-toggle .sun-icon {
+  display: block;
+}
+
+:root[data-theme-setting="dark"] .theme-toggle .moon-icon {
+  display: block;
+}
+
+/* テーマドロップダウンメニュー */
+.theme-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 168px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-menu);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+  animation: themeMenuIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-menu[hidden] {
+  display: none;
+}
+
+@keyframes themeMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
   }
-  :root:not([data-theme="dark"]) .theme-toggle .moon-icon {
-    display: block;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-:root[data-theme="light"] .theme-toggle .sun-icon {
-  display: none;
-}
-:root[data-theme="light"] .theme-toggle .moon-icon {
-  display: block;
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  outline: none;
 }
 
-:root[data-theme="dark"] .theme-toggle .sun-icon {
-  display: block;
+.theme-menu-item:hover,
+.theme-menu-item:focus-visible {
+  background-color: var(--bg-hover-subtle);
 }
-:root[data-theme="dark"] .theme-toggle .moon-icon {
-  display: none;
+
+.theme-menu-item.active {
+  color: var(--primary);
+  background-color: var(--bg-option-active);
+}
+
+.theme-menu-item.active:hover,
+.theme-menu-item.active:focus-visible {
+  background-color: var(--bg-option-active-hover);
+}
+
+.theme-menu-item .menu-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.theme-menu-item .menu-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.theme-menu-item .menu-item-title {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.theme-menu-item .menu-item-desc {
+  font-size: 9.5px;
+  color: var(--text-hint);
+  line-height: 1.2;
+}
+
+.theme-menu-item .check-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.theme-menu-item.active .check-icon {
+  opacity: 1;
 }
 
 /* Main */
