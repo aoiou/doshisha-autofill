@@ -5,8 +5,13 @@
   "minimum_chrome_version": "150",
   "browser_specific_settings": {
     "gecko": {
-      "id": "doshisha-autofill@aoiou",
-      "strict_min_version": "150.0"
+      "id": "doshisha-autofill@tadashin",
+      "strict_min_version": "150.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "description": "doshisha.ex-tic.com のログインや認証を自動化します。※本拡張機能は非公式であり、同志社大学とは関係ありません。",
@@ -28,6 +33,9 @@
     "storage"
   ],
   "background": {
+    "scripts": [
+      "background.js"
+    ],
     "service_worker": "background.js"
   },
   "commands": {
