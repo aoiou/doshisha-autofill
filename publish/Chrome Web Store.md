@@ -139,4 +139,4 @@ https://pyrite-mailman-e9a.notion.site/3dad12d79a6a807d97c0df645e934871
 
 ## 販売地域
 
-すべての地域（または「日本」）
+日本
