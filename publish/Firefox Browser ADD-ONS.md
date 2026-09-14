@@ -4,6 +4,10 @@
 
 ## 概要（manifest.jsonのdescriptionから補完される）
 
+## Select up to 3 categories for this add-on:
+
+- [x] このアドオンはどのカテゴリーにも当てはまりません
+
 ## ライセンス
 
 - [x] MIT License
