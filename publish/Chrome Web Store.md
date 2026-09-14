@@ -112,4 +112,4 @@ https://github.com/aoiou/doshisha-autofill/blob/main/PRIVACY_POLICY.md
 
 ## 販売地域
 
-日本
+すべての地域
