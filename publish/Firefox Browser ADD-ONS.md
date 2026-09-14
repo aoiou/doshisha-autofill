@@ -1,4 +1,12 @@
-# 選択
+# アドオンの説明(必須項目のみ)
+
+## 名前（manifest.jsonのnameから補完される）
+
+## 概要（manifest.jsonのdescriptionから補完される）
+
+## ライセンス
+
+- [x] MIT License
 
 ## ソースコードを提出する必要がありますか？
 
