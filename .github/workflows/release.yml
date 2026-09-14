@@ -28,8 +28,8 @@ jobs:
       - name: Update manifest.json version
         run: |
           # jqを使ってmanifest.jsonのversionを更新し、上書きする
-          jq --arg version "${{ steps.get_version.outputs.version }}" '.version = $version' manifest.json > manifest_tmp.json
-          mv manifest_tmp.json manifest.json
+          jq --arg version "${{ steps.get_version.outputs.version }}" '.version = $version' src/manifest.json > manifest_tmp.json
+          mv manifest_tmp.json src/manifest.json
           echo "manifest.json のバージョンを ${{ steps.get_version.outputs.version }} に更新しました。"
 
       - name: Commit and push manifest.json
@@ -37,7 +37,7 @@ jobs:
           # 変更がある場合はコミットし、対象ブランチへプッシュする
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add manifest.json
+          git add src/manifest.json
           
           # 差分があればコミットしてプッシュ
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }} [skip ci]" && git push origin ${{ github.event.release.target_commitish }})
@@ -45,7 +45,8 @@ jobs:
       - name: Create ZIP archive
         run: |
           # Chrome Web Store / Firefox Add-ons で公開するために必要最低限なファイルだけをZIPにまとめる
-          zip -r doshisha-autofill.zip manifest.json background.js content.js popup.html popup.css popup.js icons/
+          cd src
+          zip -r ../doshisha-autofill.zip .
 
       - name: Upload zip to Release
         env:
