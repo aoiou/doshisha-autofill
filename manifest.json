@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Doshisha Autofill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minimum_chrome_version": "150",
   "browser_specific_settings": {
     "gecko": {
-      "id": "doshisha-autofill@tadashin",
+      "id": "doshisha-autofill@tadashin.me",
       "strict_min_version": "150.0",
       "data_collection_permissions": {
         "required": [
