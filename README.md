@@ -1,6 +1,11 @@
 # Doshisha Autofill 拡張機能
 
-同志社大学の `https://doshisha.ex-tic.com/auth/session` のログイン画面において、ユーザー名の自動入力から「次へ」の自動遷移、パスワードレス認証の自動開始までを一括で行うブラウザ拡張機能です。
+同志社大学の認証システム（`https://doshisha.ex-tic.com/auth/*`、セッション画面: `https://doshisha.ex-tic.com/auth/session` 等）において、ユーザー名の自動入力から「次へ」の自動遷移、パスワードレス認証の自動開始までを一括で行うブラウザ拡張機能です。
+
+| Chrome | Firefox |
+| :---: | :---: |
+| ![Chrome](publish/assets/Chrome/screenshot-1.jpg) | ![Firefox](publish/assets/Firefox/screenshot-3.jpg) |
+| [👉 Chrome ウェブストアからインストール](https://chromewebstore.google.com/detail/pgjkkcomkkleghjjdkdcfeklbhfpanch) | 準備中（審査中） |
 
 ---
 
@@ -19,22 +24,37 @@
 
 ---
 
-## 📂 ファイル構成
+## 📦 インストール方法
 
-```
-.
-├── manifest.json       # 拡張機能の設定・権限定義 (Manifest V3)
-├── background.js       # ショートカットキー等を制御するバックグラウンドスクリプト
-├── content.js          # 対象ページ (/auth/*) で動作する自動入力スクリプト
-├── popup.html          # 拡張機能アイコンをクリックした際の設定画面UI
-├── popup.css           # 設定画面のスタイリング
-├── popup.js            # ユーザー名の保存・管理・タブ連携ロジック
-├── icons/              # 拡張機能のアイコン画像
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md           # 本説明書
-```
+### 1. 公式ストアからインストール（推奨）
+
+- **Google Chrome / Microsoft Edge / Brave 等（Chromium系ブラウザ）**  
+  👉 **[Chrome ウェブストアからインストール](https://chromewebstore.google.com/detail/pgjkkcomkkleghjjdkdcfeklbhfpanch)**  
+  *※ Edge や Brave などの Chromium 系ブラウザでも、上記リンクからそのまま追加してご利用いただけます。*
+
+- **Mozilla Firefox**  
+  現在 **Firefox Browser ADD-ONS** にて公開審査中です。審査通過後にリンクを掲載いたします。
+
+---
+
+### 2. ソースコードから読み込む場合（開発・カスタマイズ時）
+
+機能開発やカスタマイズを行う場合は、以下のデベロッパーモードを用いた読み込み手順をご利用ください。
+
+#### Google Chrome / Microsoft Edge / Brave 等（Chromium系）
+1. 本リポジトリをクローンするか、ZIPファイルをダウンロードして展開します。
+2. ブラウザで拡張機能管理画面を開きます。
+   - Chrome: `chrome://extensions/`
+   - Edge: `edge://extensions/`
+3. 画面右上にある「**デベロッパー モード**」を有効にします。
+4. 左上に表示される「**パッケージ化されていない拡張機能を読み込む**」ボタンをクリックします。
+5. リポジトリ内の **`src` ディレクトリ**（※リポジトリのルートではなく、必ず `src` フォルダ）を選択して読み込みます。
+
+#### Mozilla Firefox
+1. Firefox のアドレスバーに `about:debugging#/runtime/this-firefox` と入力して開きます。
+2. 「**一時的なアドオンを読み込む...**」ボタンをクリックします。
+3. リポジトリ内の **`src/manifest.json`** ファイルを選択します。  
+   *※ 一時的なアドオンとして読み込まれるため、Firefox再起動時には再読み込みが必要になります。*
 
 ---
 
@@ -55,6 +75,45 @@
 
 ---
 
+## 📂 ファイル構成
+
+```
+.
+├── .github/
+│   └── workflows/
+│       └── release.yml            # GitHub Releases 自動パッケージ・リリース
+├── publish/                       # ストア公開用資料・画像アセット
+│   ├── Chrome Web Store.md        # Chrome Web Store 掲載情報・審査申請内容
+│   ├── Firefox Browser ADD-ONS.md # Firefox Browser ADD-ONS 掲載情報
+│   └── assets/                    # ストア掲載用スクリーンショット
+│       ├── Chrome/
+│       └── Firefox/
+├── src/                           # 拡張機能ソースコード（読み込み対象）
+│   ├── manifest.json              # 拡張機能の設定・権限定義 (Manifest V3)
+│   ├── background.js              # バックグラウンドスクリプト（ショートカット等）
+│   ├── content.js                 # 対象ページ (/auth/*) 自動入力スクリプト
+│   ├── popup.html                 # 設定画面UI
+│   ├── popup.css                  # 設定画面スタイル
+│   ├── popup.js                   # 設定画面ロジック・ストレージ保存連携
+│   └── icons/                     # 拡張機能アイコン画像
+│       ├── icon16.png
+│       ├── icon48.png
+│       └── icon128.png
+├── LICENSE                        # MIT License
+├── PRIVACY_POLICY.md              # プライバシーポリシー
+└── README.md                      # 本説明書
+```
+
+---
+
+## 🔒 プライバシーポリシー
+
+本拡張機能は、ユーザーのプライバシーを尊重し、個人情報や認証情報（パスワード等）を外部サーバーへ収集・送信することは一切ありません。すべてのデータはブラウザ内のローカル/同期ストレージにのみ安全に保存されます。
+
+詳細は [PRIVACY_POLICY.md](PRIVACY_POLICY.md) をご確認ください。
+
+---
+
 ## ⚠️ 仕様・注意事項
 
 - **免責事項・非公式について**: 
@@ -62,3 +121,10 @@
 - **キャンセルボタン押下時の動作について**: 
   パスワード画面やパスワードレス（FIDO2）認証画面から「キャンセル」ボタンを押して最初のユーザー名入力画面に戻った場合、**拡張機能は意図的に自動入力・自動遷移を停止します**。
   これは、キャンセル操作を行った場合「普段とは別のアカウントでログインしたい」など、デフォルトの自動入力とは異なる操作を意図していると想定されるため、ユーザーの手動操作を妨げないための仕様となっています。
+
+---
+
+## 📄 ライセンス
+
+本ソフトウェアは [MIT License](LICENSE) のもとで公開されています。  
+Copyright (c) 2026 tadashin
