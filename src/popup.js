@@ -6,6 +6,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // =====================================================================
   // ストレージヘルパー（sync → local フォールバック）
+  // content.js にも同一実装あり。コンテントスクリプトとポップアップは実行コンテキストが
+  // 異なりモジュール共有不可のため、意図的な複製。
   // =====================================================================
   async function storageGet(keys) {
     try {
@@ -93,11 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function setTheme(themeSetting) {
-    const validSetting = (themeSetting === 'light' || themeSetting === 'dark') ? themeSetting : 'system';
-    applyTheme(validSetting);
+    applyTheme(themeSetting);
 
     try {
-      await storageSet({ theme: validSetting });
+      await storageSet({ theme: currentThemeSetting });
     } catch (err) {
       console.error('Failed to save theme:', err);
     }
@@ -223,12 +224,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const settings = { savedUsername: username, autoSubmit, autoFido2, autoPasswordTab };
-    lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
 
     try {
       await storageSet(settings);
+      lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
     } catch (err) {
       console.error('Failed to save settings:', err);
+      return;
     }
 
     if (options.showFeedback && isUsernameChanged) {
@@ -364,8 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (targetDomainLink) {
     targetDomainLink.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetUrl = targetDomainLink.href || 'https://doshisha.ex-tic.com/auth/session';
-      browser.tabs.create({ url: targetUrl });
+      browser.tabs.create({ url: targetDomainLink.href });
     });
   }
 

@@ -19,6 +19,8 @@
 
   // =====================================================================
   // ストレージヘルパー（sync → local フォールバック）
+  // popup.js にも同一実装あり。コンテントスクリプトとポップアップは実行コンテキストが
+  // 異なりモジュール共有不可のため、意図的な複製。
   // =====================================================================
   async function storageGet(keys) {
     try {
@@ -109,7 +111,9 @@
     }
 
     const pwdFieldWrapper = document.getElementById('password-field-wrapper');
-    if (pwdFieldWrapper && !pwdFieldWrapper.classList.contains('move-off-screen')) {
+    const idInput = document.querySelector(TARGET_SELECTOR);
+    if (pwdFieldWrapper && !pwdFieldWrapper.classList.contains('move-off-screen') &&
+        idInput && idInput.offsetParent === null) {
       return true;
     }
 
@@ -252,36 +256,27 @@
   }
 
   // 入力処理（要素を探して入力）
-  async function attemptAutofill(settings, force = false, triggerSubmit = null) {
-    // 既に入力済みかつ強制でない場合は早期リターン
-    if (state.filled && !force) return false;
+  async function attemptAutofill(settings) {
+    if (state.filled) return false;
 
     const username = settings.username;
-    const shouldSubmit = triggerSubmit !== null ? triggerSubmit : settings.autoSubmit;
-
-    if (!username) {
-      return false;
-    }
+    if (!username) return false;
 
     const input = document.querySelector(TARGET_SELECTOR);
-    if (!input) {
-      return false;
-    }
+    if (!input) return false;
 
-    // 要素が非表示（Step 2のパスワード入力中など）の場合はスキップ（強制入力時を除く）
-    if (!force && input.offsetParent === null) {
-      return false;
-    }
+    // 要素が非表示（Step 2のパスワード入力中など）の場合はスキップ
+    if (input.offsetParent === null) return false;
 
-    // 既に手動入力されている、かつ強制上書きでない場合はスキップ
-    if (!force && input.value && input.value !== username && document.activeElement === input) {
+    // 既に手動入力されている場合はスキップ
+    if (input.value && input.value !== username && document.activeElement === input) {
       return false;
     }
 
     const success = fillInputValue(input, username);
     if (success) {
       state.filled = true;
-      if (shouldSubmit) {
+      if (settings.autoSubmit) {
         clickNextButton();
       }
     }
@@ -316,13 +311,11 @@
   let debounceTimer = null;
 
   async function handleDomChanges() {
-    // 全処理完了済みなら何もしない
-    if (!observer && debounceTimer === null) return;
+    if (!observer) return;
 
     const settings = await getSettings();
 
-    // 早期リターン: 各関数の完了フラグを先にチェックし、未完了のものだけ実行
-    if (!state.filled || !state.submitted) {
+    if (!state.filled) {
       await attemptAutofill(settings);
     }
     if (!state.fido2Clicked) {
