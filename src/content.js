@@ -17,48 +17,53 @@
   const FIDO2_BUTTON_SELECTOR = 'form#fido2-form button[type="submit"]';
   const PASSWORD_TAB_SELECTOR = '#password-form-selector';
 
-  // ストレージから設定を取得
-  async function getSettings() {
-    const defaultSettings = {
-      username: '',
-      autoSubmit: false,
-      autoFido2: false,
-      autoPasswordTab: false
+  // =====================================================================
+  // 設定キャッシュ（IPC 通信を最小化）
+  // =====================================================================
+  const SETTINGS_KEYS = ['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab'];
+  const DEFAULT_SETTINGS = {
+    username: '',
+    autoSubmit: false,
+    autoFido2: false,
+    autoPasswordTab: false
+  };
+
+  let cachedSettings = null;
+
+  function parseSettings(raw) {
+    return {
+      username: raw.savedUsername || '',
+      autoSubmit: !!raw.autoSubmit,
+      autoFido2: !!raw.autoFido2,
+      autoPasswordTab: !!raw.autoPasswordTab
     };
+  }
+
+  // 初回のみストレージから読み込み、以降はキャッシュを返す
+  async function getSettings() {
+    if (cachedSettings) return cachedSettings;
+
     try {
-      const result = await browser.storage.sync.get([
-        'savedUsername',
-        'autoSubmit',
-        'autoFido2',
-        'autoPasswordTab'
-      ]);
-      return {
-        username: result.savedUsername || '',
-        autoSubmit: !!result.autoSubmit,
-        autoFido2: !!result.autoFido2,
-        autoPasswordTab: !!result.autoPasswordTab
-      };
+      const result = await browser.storage.sync.get(SETTINGS_KEYS);
+      cachedSettings = parseSettings(result);
     } catch (e) {
       // syncが使えない場合はlocalにフォールバック
       try {
-        const localResult = await browser.storage.local.get([
-          'savedUsername',
-          'autoSubmit',
-          'autoFido2',
-          'autoPasswordTab'
-        ]);
-        return {
-          username: localResult.savedUsername || '',
-          autoSubmit: !!localResult.autoSubmit,
-          autoFido2: !!localResult.autoFido2,
-          autoPasswordTab: !!localResult.autoPasswordTab
-        };
+        const localResult = await browser.storage.local.get(SETTINGS_KEYS);
+        cachedSettings = parseSettings(localResult);
       } catch (err) {
         console.error('[Doshisha Autofill] Failed to load settings:', err);
-        return defaultSettings;
+        cachedSettings = { ...DEFAULT_SETTINGS };
       }
     }
+    return cachedSettings;
   }
+
+
+
+  // =====================================================================
+  // DOM ユーティリティ
+  // =====================================================================
 
   // React/Vueなどのフレームワーク対応を含めてinputに値を設定・イベント発火
   function fillInputValue(inputElement, value) {
@@ -116,6 +121,10 @@
     return false;
   }
 
+  // =====================================================================
+  // 自動操作関数群
+  // =====================================================================
+
   // 「次へ」ボタンを自動クリック
   let hasSubmitted = false;
   function clickNextButton() {
@@ -144,10 +153,9 @@
 
   // 「パスワードレス認証」ボタンを自動クリック
   let hasFido2Clicked = false;
-  async function attemptFido2Click(force = false) {
+  async function attemptFido2Click(settings, force = false) {
     if (hasFido2Clicked && !force) return;
 
-    const settings = await getSettings();
     // パスワードタブ優先設定が有効な場合、またはFIDO2自動開始が無効な場合はスキップ
     if ((!settings.autoFido2 || settings.autoPasswordTab) && !force) return;
 
@@ -182,10 +190,9 @@
 
   // 「パスワード」タブを自動選択（FIDO2画面よりパスワード入力を優先）
   let hasSwitchedToPasswordTab = false;
-  async function attemptSwitchToPasswordTab(force = false) {
+  async function attemptSwitchToPasswordTab(settings, force = false) {
     if (hasSwitchedToPasswordTab && !force) return;
 
-    const settings = await getSettings();
     if (!settings.autoPasswordTab && !force) return;
 
     if (!isStepTwo()) return;
@@ -238,8 +245,10 @@
 
   // 入力処理（要素を探して入力）
   let isFilled = false;
-  async function attemptAutofill(force = false, triggerSubmit = null) {
-    const settings = await getSettings();
+  async function attemptAutofill(settings, force = false, triggerSubmit = null) {
+    // 既に入力済みかつ強制でない場合は早期リターン
+    if (isFilled && !force) return false;
+
     const username = settings.username;
     const shouldSubmit = triggerSubmit !== null ? triggerSubmit : settings.autoSubmit;
 
@@ -272,23 +281,74 @@
     return success;
   }
 
-  function handleDomChanges() {
-    attemptAutofill();
-    attemptFido2Click();
-    attemptSwitchToPasswordTab();
-    attemptFocusPassword();
+  // =====================================================================
+  // MutationObserver と DOM 変更ハンドリング
+  // =====================================================================
+
+  let observer = null;
+
+  // 全ての自動処理が完了したかを判定し、完了時に Observer を停止
+  function checkAndStopObserver() {
+    if (!observer) return;
+
+    // Step 1: ユーザー名入力＋送信が完了 → Step 2 に遷移済み
+    const step1Done = isFilled && isStepTwo();
+
+    // Step 2: FIDO2 クリック済み、またはパスワードタブ切替＋フォーカス完了
+    const step2Done = hasFido2Clicked ||
+                      hasSwitchedToPasswordTab ||
+                      hasFocusedPassword;
+
+    if (step1Done && step2Done) {
+      observer.disconnect();
+      observer = null;
+    }
+  }
+
+  // debounce 用のタイマー ID
+  let debounceTimer = null;
+
+  async function handleDomChanges() {
+    // 全処理完了済みなら何もしない
+    if (!observer && debounceTimer === null) return;
+
+    const settings = await getSettings();
+
+    // 早期リターン: 各関数の完了フラグを先にチェックし、未完了のものだけ実行
+    if (!isFilled || !hasSubmitted) {
+      await attemptAutofill(settings);
+    }
+    if (!hasFido2Clicked) {
+      await attemptFido2Click(settings);
+    }
+    if (!hasSwitchedToPasswordTab) {
+      await attemptSwitchToPasswordTab(settings);
+    }
+    if (!hasFocusedPassword) {
+      attemptFocusPassword();
+    }
+
+    // 全処理完了時に Observer を即時停止
+    checkAndStopObserver();
+  }
+
+  // debounce でラップした DOM 変更ハンドラ
+  function debouncedHandleDomChanges() {
+    if (debounceTimer !== null) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      handleDomChanges();
+    }, 50);
   }
 
   // DOM監視（動的レンダリング・遅延ロード・画面切り替え対応）
-  let observer = null;
   function startObserver() {
     if (observer) return;
 
-    // 初回チェック
-    handleDomChanges();
-
-    observer = new MutationObserver((mutations, obs) => {
-      handleDomChanges();
+    observer = new MutationObserver(() => {
+      debouncedHandleDomChanges();
     });
 
     observer.observe(document.documentElement || document.body, {
@@ -298,9 +358,12 @@
       attributeFilter: ['style', 'class', 'data-step']
     });
 
-    // ページロードから30秒後に監視を停止（無駄な負荷防止）
+    // 初回チェック（observer セットアップ後に実行）
+    handleDomChanges();
+
+    // 安全策: ページロードから30秒後に未停止なら強制停止
     setTimeout(() => {
-      if (observer && (hasFido2Clicked || (isFilled && isStepTwo()))) {
+      if (observer) {
         observer.disconnect();
         observer = null;
       }
