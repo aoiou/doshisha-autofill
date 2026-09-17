@@ -158,8 +158,8 @@
   function attemptFido2Click(settings, force = false) {
     if ((state.fido2Clicked || state.fido2ClickScheduled) && !force) return;
 
-    // パスワードタブ優先設定が有効な場合、またはFIDO2自動開始が無効な場合はスキップ
-    if ((!settings.autoFido2 || settings.autoPasswordTab) && !force) return;
+    const shouldAutoFido2 = settings.autoFido2 && !settings.autoPasswordTab;
+    if (!shouldAutoFido2 && !force) return;
 
     const fido2Wrapper = document.getElementById('fido2-form-wrapper');
     const fido2Btn = document.querySelector(FIDO2_BUTTON_SELECTOR);
@@ -301,6 +301,16 @@
     if (step1Done && step2Done) {
       observer.disconnect();
       observer = null;
+      return;
+    }
+
+    // FIDO2 画面表示中かつ設定上実行すべきアクションがない場合は早期停止
+    if (step1Done && cachedSettings) {
+      const fido2Visible = document.getElementById('fido2-form-wrapper')?.style.display !== 'none';
+      if (fido2Visible && !cachedSettings.autoFido2 && !cachedSettings.autoPasswordTab) {
+        observer.disconnect();
+        observer = null;
+      }
     }
   }
 

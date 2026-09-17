@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const LOGIN_URL = 'https://doshisha.ex-tic.com/auth/session';
+
   const usernameInput = document.getElementById('username-input');
   const clearBtn = document.getElementById('clear-btn');
   const saveIndicator = document.getElementById('save-indicator');
@@ -65,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateThemeToggleUI(validSetting);
     updateThemeMenuUI(validSetting);
+    return validSetting;
   }
 
   function updateThemeToggleUI(themeSetting) {
@@ -90,10 +93,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function setTheme(themeSetting) {
-    applyTheme(themeSetting);
-
+    const applied = applyTheme(themeSetting);
     try {
-      await storageSet({ theme: currentThemeSetting });
+      await storageSet({ theme: applied });
     } catch (err) {
       console.error('Failed to save theme:', err);
     }
@@ -184,9 +186,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const autoPasswordTab = !!res.autoPasswordTab;
 
       usernameInput.value = username;
-      autoSubmitToggle.checked = autoSubmit;
-      autoFido2Toggle.checked = autoFido2;
-      autoPasswordTabToggle.checked = autoPasswordTab;
+      if (autoSubmitToggle) autoSubmitToggle.checked = autoSubmit;
+      if (autoFido2Toggle) autoFido2Toggle.checked = autoFido2;
+      if (autoPasswordTabToggle) autoPasswordTabToggle.checked = autoPasswordTab;
 
       lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
       updateClearButton();
@@ -203,9 +205,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const username = usernameInput.value.trim();
-    const autoSubmit = autoSubmitToggle.checked;
-    const autoFido2 = autoFido2Toggle.checked;
-    const autoPasswordTab = autoPasswordTabToggle.checked;
+    const autoSubmit = autoSubmitToggle?.checked ?? false;
+    const autoFido2 = autoFido2Toggle?.checked ?? false;
+    const autoPasswordTab = autoPasswordTabToggle?.checked ?? false;
 
     // 前回の保存内容と同一なら無駄な書き込みをスキップ
     const isUsernameChanged = username !== lastSavedState.username;
@@ -272,14 +274,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 5. 「自動で次へ」トグル：即時保存 ＆ 非言語パルス
-  autoSubmitToggle.addEventListener('change', () => {
+  autoSubmitToggle?.addEventListener('change', () => {
     saveSettings({ showFeedback: false });
     triggerOptionPulse(autoSubmitToggle);
   });
 
   // 6. 「パスワードレス認証」トグル：即時保存 ＆ 非言語パルス（パスワードタブ自動選択がONならOFFにする）
-  autoFido2Toggle.addEventListener('change', () => {
-    if (autoFido2Toggle.checked && autoPasswordTabToggle.checked) {
+  autoFido2Toggle?.addEventListener('change', () => {
+    if (autoFido2Toggle.checked && autoPasswordTabToggle?.checked) {
       autoPasswordTabToggle.checked = false;
       triggerOptionPulse(autoPasswordTabToggle);
     }
@@ -288,8 +290,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 7. 「パスワード」タブ自動選択トグル：即時保存 ＆ 非言語パルス（パスワードレス自動開始がONならOFFにする）
-  autoPasswordTabToggle.addEventListener('change', () => {
-    if (autoPasswordTabToggle.checked && autoFido2Toggle.checked) {
+  autoPasswordTabToggle?.addEventListener('change', () => {
+    if (autoPasswordTabToggle.checked && autoFido2Toggle?.checked) {
       autoFido2Toggle.checked = false;
       triggerOptionPulse(autoFido2Toggle);
     }
@@ -361,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (targetDomainLink) {
     targetDomainLink.addEventListener('click', (e) => {
       e.preventDefault();
-      browser.tabs.create({ url: targetDomainLink.href });
+      browser.tabs.create({ url: LOGIN_URL });
     });
   }
 
