@@ -99,33 +99,20 @@
   }
 
   // Step 2（パスワード/FIDO2認証画面）に移行しているかをDOMから判定
+  // Extic.html は jQuery の .data('step', 'second') を使用しているため
+  // HTML属性の data-step は更新されない。DOM要素の表示状態から判定する。
   function isStepTwo() {
-    const loginForm = document.querySelector('form#login');
-    if (!loginForm) return false;
-
-    // Extic.html は jQuery の .data('step', 'second') を使用しているため
-    // HTML属性の data-step は更新されない。DOM要素の表示状態から確実に判定する。
+    // 入力欄ラッパーが非表示 → Step 2 の最も確実な指標
     const idFieldWrapper = document.getElementById('identifier-field-wrapper');
-    if (idFieldWrapper && idFieldWrapper.style.display === 'none') {
-      return true;
-    }
+    if (idFieldWrapper?.style.display === 'none') return true;
 
-    const pwdFieldWrapper = document.getElementById('password-field-wrapper');
-    const idInput = document.querySelector(TARGET_SELECTOR);
-    if (pwdFieldWrapper && !pwdFieldWrapper.classList.contains('move-off-screen') &&
-        idInput && idInput.offsetParent === null) {
-      return true;
-    }
-
+    // 送信済みユーザー名表示欄が可視 → Step 2 への遷移後に表示される
     const idWrapper = document.getElementById('identifier-wrapper');
-    if (idWrapper && idWrapper.style.display !== 'none' && idWrapper.textContent.trim() !== '') {
-      return true;
-    }
+    if (idWrapper && idWrapper.style.display !== 'none') return true;
 
+    // FIDO2 認証画面が表示されている
     const fido2Wrapper = document.getElementById('fido2-form-wrapper');
-    if (fido2Wrapper && fido2Wrapper.style.display !== 'none') {
-      return true;
-    }
+    if (fido2Wrapper && fido2Wrapper.style.display !== 'none') return true;
 
     return false;
   }
@@ -137,8 +124,10 @@
     filled: false,
     submitted: false,
     fido2Clicked: false,
+    fido2ClickScheduled: false,
     switchedToPasswordTab: false,
     focusedPassword: false,
+    focusPasswordScheduled: false,
   };
 
   // 「次へ」ボタンを自動クリック
@@ -167,7 +156,7 @@
 
   // 「パスワードレス認証」ボタンを自動クリック
   function attemptFido2Click(settings, force = false) {
-    if (state.fido2Clicked && !force) return;
+    if ((state.fido2Clicked || state.fido2ClickScheduled) && !force) return;
 
     // パスワードタブ優先設定が有効な場合、またはFIDO2自動開始が無効な場合はスキップ
     if ((!settings.autoFido2 || settings.autoPasswordTab) && !force) return;
@@ -191,11 +180,14 @@
       return;
     }
 
-    state.fido2Clicked = true;
+    state.fido2ClickScheduled = true;
 
     // 画面切り替えのアニメーションと初期化待ち（200ms）
+    // クリック成功時のみ fido2Clicked を立てる（失敗時はリトライ可能にする）
     setTimeout(() => {
+      state.fido2ClickScheduled = false;
       if (fido2Btn.offsetParent !== null && !fido2Btn.disabled) {
+        state.fido2Clicked = true;
         fido2Btn.click();
       }
     }, 200);
@@ -222,7 +214,7 @@
 
   // パスワード入力欄へ自動フォーカス（標準機能）
   function attemptFocusPassword(force = false) {
-    if (state.focusedPassword && !force) return;
+    if ((state.focusedPassword || state.focusPasswordScheduled) && !force) return;
 
     if (!isStepTwo()) return;
 
@@ -246,11 +238,17 @@
       return;
     }
 
-    state.focusedPassword = true;
+    state.focusPasswordScheduled = true;
+
+    // フォーカス成功時のみ focusedPassword を立てる（失敗時はリトライ可能にする）
+    // DOM変化を伴わないためここで checkAndStopObserver を呼ぶ
     setTimeout(() => {
+      state.focusPasswordScheduled = false;
       if (pwdInput.offsetParent !== null && document.activeElement !== pwdInput) {
+        state.focusedPassword = true;
         pwdInput.focus();
       }
+      checkAndStopObserver();
     }, 50);
   }
 
@@ -308,27 +306,33 @@
 
   // debounce 用のタイマー ID
   let debounceTimer = null;
+  let handlingDomChanges = false;
 
   async function handleDomChanges() {
-    if (!observer) return;
+    if (!observer || handlingDomChanges) return;
+    handlingDomChanges = true;
 
-    const settings = await getSettings();
+    try {
+      const settings = await getSettings();
 
-    if (!state.filled) {
-      await attemptAutofill(settings);
-    }
-    if (!state.fido2Clicked) {
-      attemptFido2Click(settings);
-    }
-    if (!state.switchedToPasswordTab) {
-      attemptSwitchToPasswordTab(settings);
-    }
-    if (!state.focusedPassword) {
-      attemptFocusPassword();
-    }
+      if (!state.filled) {
+        await attemptAutofill(settings);
+      }
+      if (!state.fido2Clicked && !state.fido2ClickScheduled) {
+        attemptFido2Click(settings);
+      }
+      if (!state.switchedToPasswordTab) {
+        attemptSwitchToPasswordTab(settings);
+      }
+      if (!state.focusedPassword && !state.focusPasswordScheduled) {
+        attemptFocusPassword();
+      }
 
-    // 全処理完了時に Observer を即時停止
-    checkAndStopObserver();
+      // 全処理完了時に Observer を即時停止
+      checkAndStopObserver();
+    } finally {
+      handlingDomChanges = false;
+    }
   }
 
   // debounce でラップした DOM 変更ハンドラ
