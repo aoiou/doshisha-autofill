@@ -18,11 +18,22 @@
   const PASSWORD_TAB_SELECTOR = '#password-form-selector';
 
   // =====================================================================
+  // ストレージヘルパー（sync → local フォールバック）
+  // =====================================================================
+  async function storageGet(keys) {
+    try {
+      return await browser.storage.sync.get(keys);
+    } catch (e) {
+      return await browser.storage.local.get(keys);
+    }
+  }
+
+  // =====================================================================
   // 設定キャッシュ（IPC 通信を最小化）
   // =====================================================================
   const SETTINGS_KEYS = ['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab'];
   const DEFAULT_SETTINGS = {
-    username: '',
+    savedUsername: '',
     autoSubmit: false,
     autoFido2: false,
     autoPasswordTab: false
@@ -44,17 +55,11 @@
     if (cachedSettings) return cachedSettings;
 
     try {
-      const result = await browser.storage.sync.get(SETTINGS_KEYS);
+      const result = await storageGet(SETTINGS_KEYS);
       cachedSettings = parseSettings(result);
-    } catch (e) {
-      // syncが使えない場合はlocalにフォールバック
-      try {
-        const localResult = await browser.storage.local.get(SETTINGS_KEYS);
-        cachedSettings = parseSettings(localResult);
-      } catch (err) {
-        console.error('[Doshisha Autofill] Failed to load settings:', err);
-        cachedSettings = { ...DEFAULT_SETTINGS };
-      }
+    } catch (err) {
+      console.error('[Doshisha Autofill] Failed to load settings:', err);
+      cachedSettings = parseSettings(DEFAULT_SETTINGS);
     }
     return cachedSettings;
   }
@@ -122,13 +127,19 @@
   }
 
   // =====================================================================
-  // 自動操作関数群
+  // 自動操作の状態管理
   // =====================================================================
+  const state = {
+    filled: false,
+    submitted: false,
+    fido2Clicked: false,
+    switchedToPasswordTab: false,
+    focusedPassword: false,
+  };
 
   // 「次へ」ボタンを自動クリック
-  let hasSubmitted = false;
   function clickNextButton() {
-    if (hasSubmitted) return;
+    if (state.submitted) return;
 
     const nextBtn = document.querySelector(SUBMIT_BUTTON_SELECTOR);
     const loginForm = document.querySelector('form#login');
@@ -141,7 +152,7 @@
     // ボタンが無効化されている場合はスキップ
     if (nextBtn.disabled) return;
 
-    hasSubmitted = true;
+    state.submitted = true;
 
     // イベント伝播とフォーム状態更新を待ってからクリック（150ms）
     setTimeout(() => {
@@ -152,9 +163,8 @@
   }
 
   // 「パスワードレス認証」ボタンを自動クリック
-  let hasFido2Clicked = false;
-  async function attemptFido2Click(settings, force = false) {
-    if (hasFido2Clicked && !force) return;
+  function attemptFido2Click(settings, force = false) {
+    if (state.fido2Clicked && !force) return;
 
     // パスワードタブ優先設定が有効な場合、またはFIDO2自動開始が無効な場合はスキップ
     if ((!settings.autoFido2 || settings.autoPasswordTab) && !force) return;
@@ -178,7 +188,7 @@
       return;
     }
 
-    hasFido2Clicked = true;
+    state.fido2Clicked = true;
 
     // 画面切り替えのアニメーションと初期化待ち（200ms）
     setTimeout(() => {
@@ -189,9 +199,8 @@
   }
 
   // 「パスワード」タブを自動選択（FIDO2画面よりパスワード入力を優先）
-  let hasSwitchedToPasswordTab = false;
-  async function attemptSwitchToPasswordTab(settings, force = false) {
-    if (hasSwitchedToPasswordTab && !force) return;
+  function attemptSwitchToPasswordTab(settings, force = false) {
+    if (state.switchedToPasswordTab && !force) return;
 
     if (!settings.autoPasswordTab && !force) return;
 
@@ -203,15 +212,14 @@
 
     // タブ選択バーが表示されており、かつまだパスワードタブがactiveでない場合
     if (formSelector.style.display !== 'none' && !passwordTab.classList.contains('active')) {
-      hasSwitchedToPasswordTab = true;
+      state.switchedToPasswordTab = true;
       passwordTab.click();
     }
   }
 
   // パスワード入力欄へ自動フォーカス（標準機能）
-  let hasFocusedPassword = false;
   function attemptFocusPassword(force = false) {
-    if (hasFocusedPassword && !force) return;
+    if (state.focusedPassword && !force) return;
 
     if (!isStepTwo()) return;
 
@@ -235,7 +243,7 @@
       return;
     }
 
-    hasFocusedPassword = true;
+    state.focusedPassword = true;
     setTimeout(() => {
       if (pwdInput.offsetParent !== null && document.activeElement !== pwdInput) {
         pwdInput.focus();
@@ -244,10 +252,9 @@
   }
 
   // 入力処理（要素を探して入力）
-  let isFilled = false;
   async function attemptAutofill(settings, force = false, triggerSubmit = null) {
     // 既に入力済みかつ強制でない場合は早期リターン
-    if (isFilled && !force) return false;
+    if (state.filled && !force) return false;
 
     const username = settings.username;
     const shouldSubmit = triggerSubmit !== null ? triggerSubmit : settings.autoSubmit;
@@ -273,7 +280,7 @@
 
     const success = fillInputValue(input, username);
     if (success) {
-      isFilled = true;
+      state.filled = true;
       if (shouldSubmit) {
         clickNextButton();
       }
@@ -292,12 +299,12 @@
     if (!observer) return;
 
     // Step 1: ユーザー名入力＋送信が完了 → Step 2 に遷移済み
-    const step1Done = isFilled && isStepTwo();
+    const step1Done = state.filled && isStepTwo();
 
     // Step 2: FIDO2 クリック済み、またはパスワードタブ切替＋フォーカス完了
-    const step2Done = hasFido2Clicked ||
-                      hasSwitchedToPasswordTab ||
-                      hasFocusedPassword;
+    const step2Done = state.fido2Clicked ||
+                      state.switchedToPasswordTab ||
+                      state.focusedPassword;
 
     if (step1Done && step2Done) {
       observer.disconnect();
@@ -315,16 +322,16 @@
     const settings = await getSettings();
 
     // 早期リターン: 各関数の完了フラグを先にチェックし、未完了のものだけ実行
-    if (!isFilled || !hasSubmitted) {
+    if (!state.filled || !state.submitted) {
       await attemptAutofill(settings);
     }
-    if (!hasFido2Clicked) {
-      await attemptFido2Click(settings);
+    if (!state.fido2Clicked) {
+      attemptFido2Click(settings);
     }
-    if (!hasSwitchedToPasswordTab) {
-      await attemptSwitchToPasswordTab(settings);
+    if (!state.switchedToPasswordTab) {
+      attemptSwitchToPasswordTab(settings);
     }
-    if (!hasFocusedPassword) {
+    if (!state.focusedPassword) {
       attemptFocusPassword();
     }
 

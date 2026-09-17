@@ -4,6 +4,25 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // =====================================================================
+  // ストレージヘルパー（sync → local フォールバック）
+  // =====================================================================
+  async function storageGet(keys) {
+    try {
+      return await browser.storage.sync.get(keys);
+    } catch (e) {
+      return await browser.storage.local.get(keys);
+    }
+  }
+
+  async function storageSet(data) {
+    try {
+      await browser.storage.sync.set(data);
+    } catch (e) {
+      await browser.storage.local.set(data);
+    }
+  }
+
   const usernameInput = document.getElementById('username-input');
   const clearBtn = document.getElementById('clear-btn');
   const saveIndicator = document.getElementById('save-indicator');
@@ -78,13 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTheme(validSetting);
 
     try {
-      await browser.storage.sync.set({ theme: validSetting });
-    } catch (e) {
-      try {
-        await browser.storage.local.set({ theme: validSetting });
-      } catch (err) {
-        console.error('Failed to save theme:', err);
-      }
+      await storageSet({ theme: validSetting });
+    } catch (err) {
+      console.error('Failed to save theme:', err);
     }
   }
 
@@ -164,8 +179,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ストレージから設定を取得
   async function loadSettings() {
     try {
-      const res = await browser.storage.sync.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
+      const res = await storageGet(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
       applyTheme(res.theme || 'system');
+
       const username = res.savedUsername || '';
       const autoSubmit = !!res.autoSubmit;
       const autoFido2 = !!res.autoFido2;
@@ -178,25 +194,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
       updateClearButton();
-    } catch (e) {
-      try {
-        const localRes = await browser.storage.local.get(['savedUsername', 'autoSubmit', 'autoFido2', 'autoPasswordTab', 'theme']);
-        applyTheme(localRes.theme || 'system');
-        const username = localRes.savedUsername || '';
-        const autoSubmit = !!localRes.autoSubmit;
-        const autoFido2 = !!localRes.autoFido2;
-        const autoPasswordTab = !!localRes.autoPasswordTab;
-
-        usernameInput.value = username;
-        autoSubmitToggle.checked = autoSubmit;
-        autoFido2Toggle.checked = autoFido2;
-        autoPasswordTabToggle.checked = autoPasswordTab;
-
-        lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
-        updateClearButton();
-      } catch (err) {
-        console.error('Failed to load storage:', err);
-      }
+    } catch (err) {
+      console.error('Failed to load storage:', err);
     }
   }
 
@@ -227,13 +226,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     lastSavedState = { username, autoSubmit, autoFido2, autoPasswordTab };
 
     try {
-      await browser.storage.sync.set(settings);
-    } catch (e) {
-      try {
-        await browser.storage.local.set(settings);
-      } catch (err) {
-        console.error('Failed to save settings:', err);
-      }
+      await storageSet(settings);
+    } catch (err) {
+      console.error('Failed to save settings:', err);
     }
 
     if (options.showFeedback && isUsernameChanged) {
@@ -295,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     triggerOptionPulse(autoFido2Toggle);
   });
 
-  // 6-2. 「パスワード」タブ自動選択トグル：即時保存 ＆ 非言語パルス（パスワードレス自動開始がONならOFFにする）
+  // 7. 「パスワード」タブ自動選択トグル：即時保存 ＆ 非言語パルス（パスワードレス自動開始がONならOFFにする）
   autoPasswordTabToggle.addEventListener('change', () => {
     if (autoPasswordTabToggle.checked && autoFido2Toggle.checked) {
       autoFido2Toggle.checked = false;
@@ -305,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     triggerOptionPulse(autoPasswordTabToggle);
   });
 
-  // 7. 外観テーマ設定（ドロップダウンメニュー操作・切り替え）
+  // 8. 外観テーマ設定（ドロップダウンメニュー操作・切り替え）
   if (themeToggle) {
     themeToggle.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -365,7 +360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 8. 対象ドメインクリック：ログインページを新規タブで開く
+  // 9. 対象ドメインクリック：ログインページを新規タブで開く
   if (targetDomainLink) {
     targetDomainLink.addEventListener('click', (e) => {
       e.preventDefault();
