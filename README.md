@@ -2,10 +2,10 @@
 
 同志社大学の認証システム（`https://doshisha.ex-tic.com/auth/*`、セッション画面: `https://doshisha.ex-tic.com/auth/session` 等）において、ユーザー名の自動入力から「次へ」の自動遷移、パスワードレス認証の自動開始までを一括で行うブラウザ拡張機能です。
 
-| Chrome | Firefox |
+| Chrome (Chromium系ブラウザ) | Firefox (Firefox系ブラウザ) |
 | :---: | :---: |
 | ![Chrome](publish/assets/Chrome/screenshot-1.jpg) | ![Firefox](publish/assets/Firefox/screenshot-3.jpg) |
-| [👉 Chrome ウェブストアからインストール](https://chromewebstore.google.com/detail/pgjkkcomkkleghjjdkdcfeklbhfpanch) | 準備中（審査中） |
+| [👉 Chrome ウェブストアからインストール](https://chromewebstore.google.com/detail/pgjkkcomkkleghjjdkdcfeklbhfpanch) | [👉 Firefox ADD-ONS からインストール](https://addons.mozilla.org/addon/doshisha-autofill/) |
 
 ---
 
@@ -32,8 +32,9 @@
   👉 **[Chrome ウェブストアからインストール](https://chromewebstore.google.com/detail/pgjkkcomkkleghjjdkdcfeklbhfpanch)**  
   *※ Edge や Brave などの Chromium 系ブラウザでも、上記リンクからそのまま追加してご利用いただけます。*
 
-- **Mozilla Firefox**  
-  現在 **Firefox Browser ADD-ONS** にて公開審査中です。審査通過後にリンクを掲載いたします。
+- **Mozilla Firefox / Zen / Floorp 等（Firefox系ブラウザ）**  
+  👉 **[Firefox ADD-ONS からインストール](https://addons.mozilla.org/addon/doshisha-autofill/)**  
+  *※ Zen や Floorp などの Firefox 系ブラウザでも、上記リンクからそのまま追加してご利用いただけます。*
 
 ---
 
@@ -41,7 +42,7 @@
 
 機能開発やカスタマイズを行う場合は、以下のデベロッパーモードを用いた読み込み手順をご利用ください。
 
-#### Google Chrome / Microsoft Edge / Brave 等（Chromium系）
+#### Google Chrome / Microsoft Edge / Brave 等（Chromium系ブラウザ）
 1. 本リポジトリをクローンするか、ZIPファイルをダウンロードして展開します。
 2. ブラウザで拡張機能管理画面を開きます。
    - Chrome: `chrome://extensions/`
@@ -50,11 +51,11 @@
 4. 左上に表示される「**パッケージ化されていない拡張機能を読み込む**」ボタンをクリックします。
 5. リポジトリ内の **`src` ディレクトリ**（※リポジトリのルートではなく、必ず `src` フォルダ）を選択して読み込みます。
 
-#### Mozilla Firefox
-1. Firefox のアドレスバーに `about:debugging#/runtime/this-firefox` と入力して開きます。
+#### Mozilla Firefox / Zen / Floorp 等（Firefox系ブラウザ）
+1. アドレスバーに `about:debugging#/runtime/this-firefox` と入力して開きます。
 2. 「**一時的なアドオンを読み込む...**」ボタンをクリックします。
 3. リポジトリ内の **`src/manifest.json`** ファイルを選択します。  
-   *※ 一時的なアドオンとして読み込まれるため、Firefox再起動時には再読み込みが必要になります。*
+   *※ 一時的なアドオンとして読み込まれるため、ブラウザ再起動時には再読み込みが必要になります。*
 
 ---
 
