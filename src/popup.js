@@ -55,20 +55,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const validSetting = (themeSetting === 'light' || themeSetting === 'dark') ? themeSetting : 'system';
     currentThemeSetting = validSetting;
 
-    // 1. スタイル適用用の data-theme ('light' | 'dark' | 属性なし = OS設定)
-    if (validSetting === 'light' || validSetting === 'dark') {
-      document.documentElement.setAttribute('data-theme', validSetting);
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    // OS設定を解決して常に 'dark' | 'light' を data-theme にセット（@media 不要）
+    const resolvedTheme = validSetting === 'system'
+      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : validSetting;
 
-    // 2. アイコンおよびメニュー状態表示用の data-theme-setting
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
     document.documentElement.setAttribute('data-theme-setting', validSetting);
 
-    // 3. ボタンの title / aria-label 更新
     updateThemeToggleUI(validSetting);
-
-    // 4. ドロップダウンメニューのアクティブ項目更新
     updateThemeMenuUI(validSetting);
   }
 
@@ -272,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   clearBtn.addEventListener('click', () => {
     usernameInput.value = '';
     updateClearButton();
-    saveSettings({ showFeedback: true });
+    saveSettings({ showFeedback: false });
     usernameInput.focus();
   });
 

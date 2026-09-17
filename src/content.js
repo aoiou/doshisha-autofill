@@ -156,11 +156,10 @@
     // ボタンが無効化されている場合はスキップ
     if (nextBtn.disabled) return;
 
-    state.submitted = true;
-
     // イベント伝播とフォーム状態更新を待ってからクリック（150ms）
     setTimeout(() => {
       if (!isStepTwo() && !nextBtn.disabled) {
+        state.submitted = true;
         nextBtn.click();
       }
     }, 150);
@@ -359,7 +358,7 @@
     });
 
     // 初回チェック（observer セットアップ後に実行）
-    handleDomChanges();
+    debouncedHandleDomChanges();
 
     // 安全策: ページロードから30秒後に未停止なら強制停止
     setTimeout(() => {
