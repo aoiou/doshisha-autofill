@@ -68,8 +68,6 @@
     return cachedSettings;
   }
 
-
-
   // =====================================================================
   // DOM ユーティリティ
   // =====================================================================
@@ -156,11 +154,9 @@
   }
 
   // 「パスワードレス認証」ボタンを自動クリック
-  function attemptFido2Click(settings, force = false) {
-    if ((state.fido2Clicked || state.fido2ClickScheduled) && !force) return;
-
-    const shouldAutoFido2 = settings.autoFido2 && !settings.autoPasswordTab;
-    if (!shouldAutoFido2 && !force) return;
+  function attemptFido2Click(settings) {
+    if (state.fido2Clicked || state.fido2ClickScheduled) return;
+    if (!settings.autoFido2 || settings.autoPasswordTab) return;
 
     const fido2Wrapper = document.getElementById('fido2-form-wrapper');
     const fido2Btn = document.querySelector(FIDO2_BUTTON_SELECTOR);
@@ -193,10 +189,9 @@
   }
 
   // 「パスワード」タブを自動選択（FIDO2画面よりパスワード入力を優先）
-  function attemptSwitchToPasswordTab(settings, force = false) {
-    if (state.switchedToPasswordTab && !force) return;
-
-    if (!settings.autoPasswordTab && !force) return;
+  function attemptSwitchToPasswordTab(settings) {
+    if (state.switchedToPasswordTab) return;
+    if (!settings.autoPasswordTab) return;
 
     if (!isStepTwo()) return;
 
@@ -212,8 +207,8 @@
   }
 
   // パスワード入力欄へ自動フォーカス（標準機能）
-  function attemptFocusPassword(force = false) {
-    if ((state.focusedPassword || state.focusPasswordScheduled) && !force) return;
+  function attemptFocusPassword() {
+    if (state.focusedPassword || state.focusPasswordScheduled) return;
 
     if (!isStepTwo()) return;
 
@@ -322,20 +317,10 @@
     try {
       const settings = await getSettings();
 
-      if (!state.filled) {
-        await attemptAutofill(settings);
-      }
-      if (!state.fido2Clicked && !state.fido2ClickScheduled) {
-        attemptFido2Click(settings);
-      }
-      if (!state.switchedToPasswordTab) {
-        attemptSwitchToPasswordTab(settings);
-      }
-      if (!state.focusedPassword && !state.focusPasswordScheduled) {
-        attemptFocusPassword();
-      }
-
-      // 全処理完了時に Observer を即時停止
+      await attemptAutofill(settings);
+      attemptFido2Click(settings);
+      attemptSwitchToPasswordTab(settings);
+      attemptFocusPassword();
       checkAndStopObserver();
     } finally {
       handlingDomChanges = false;

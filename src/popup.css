@@ -140,11 +140,6 @@ body {
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
 .title {
   font-size: 13px;
   font-weight: 600;
