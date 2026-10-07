@@ -13,11 +13,11 @@
   const PASSWORD_TAB_SELECTOR = '#password-form-selector';
 
   // タイミング定数（ms）
-  const DELAY_SUBMIT = 150;
-  const DELAY_FIDO2 = 200;
-  const DELAY_FOCUS = 50;
-  const DELAY_DEBOUNCE = 50;
-  const OBSERVER_TIMEOUT = 30000;
+  const DELAY_SUBMIT = 0;
+  const DELAY_FIDO2 = 0;
+  const DELAY_FOCUS = 0;
+  const DELAY_DEBOUNCE = 20;
+  const OBSERVER_TIMEOUT = 10000;
 
   // =====================================================================
   // ストレージヘルパー（sync → local フォールバック）
