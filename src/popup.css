@@ -431,7 +431,7 @@ body {
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-.form-input:focus ~ .input-icon {
+.input-wrapper:focus-within .input-icon {
   color: var(--primary);
 }
 
