@@ -438,10 +438,11 @@ body {
   color: var(--primary);
 }
 
-/* 自動保存完了時の枠線発光ハイライト */
-.form-input.is-saved {
-  border-color: var(--success) !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28) !important;
+/* 自動保存完了時の枠線発光ハイライト（:focus より優先） */
+.form-input.is-saved,
+.form-input.is-saved:focus {
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28);
 }
 
 .input-actions {

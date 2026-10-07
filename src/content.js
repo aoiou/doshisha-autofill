@@ -1,8 +1,3 @@
-/**
- * Doshisha Autofill
- * Content script for automating login on doshisha.ex-tic.com
- */
-
 (() => {
   'use strict';
 

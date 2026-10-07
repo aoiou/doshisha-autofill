@@ -1,8 +1,3 @@
-/**
- * Popup Script for Doshisha Autofill
- * 完全自動保存対応
- */
-
 document.addEventListener('DOMContentLoaded', async () => {
   // =====================================================================
   // ストレージヘルパー（sync → local フォールバック）
@@ -151,11 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // クリアボタンの表示切り替え
   function updateClearButton() {
-    if (usernameInput.value.length > 0) {
-      clearBtn.classList.add('visible');
-    } else {
-      clearBtn.classList.remove('visible');
-    }
+    clearBtn.classList.toggle('visible', usernameInput.value.length > 0);
   }
 
   // バージョン番号の動的反映 (manifest.json から取得)
@@ -279,24 +270,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     triggerOptionPulse(autoSubmitToggle);
   });
 
-  // 6. 「パスワードレス認証」トグル：即時保存 ＆ 非言語パルス（パスワードタブ自動選択がONならOFFにする）
-  autoFido2Toggle?.addEventListener('change', () => {
-    if (autoFido2Toggle.checked && autoPasswordTabToggle?.checked) {
-      autoPasswordTabToggle.checked = false;
-      triggerOptionPulse(autoPasswordTabToggle);
+  // 排他トグル：一方をONにすると他方をOFFにする
+  function handleExclusiveToggle(toggled, other) {
+    if (toggled.checked && other?.checked) {
+      other.checked = false;
+      triggerOptionPulse(other);
     }
     saveSettings({ showFeedback: false });
-    triggerOptionPulse(autoFido2Toggle);
+    triggerOptionPulse(toggled);
+  }
+
+  // 6. 「パスワードレス認証」トグル
+  autoFido2Toggle?.addEventListener('change', () => {
+    handleExclusiveToggle(autoFido2Toggle, autoPasswordTabToggle);
   });
 
-  // 7. 「パスワード」タブ自動選択トグル：即時保存 ＆ 非言語パルス（パスワードレス自動開始がONならOFFにする）
+  // 7. 「パスワード」タブ自動選択トグル
   autoPasswordTabToggle?.addEventListener('change', () => {
-    if (autoPasswordTabToggle.checked && autoFido2Toggle?.checked) {
-      autoFido2Toggle.checked = false;
-      triggerOptionPulse(autoFido2Toggle);
-    }
-    saveSettings({ showFeedback: false });
-    triggerOptionPulse(autoPasswordTabToggle);
+    handleExclusiveToggle(autoPasswordTabToggle, autoFido2Toggle);
   });
 
   // 8. 外観テーマ設定（ドロップダウンメニュー操作・切り替え）
