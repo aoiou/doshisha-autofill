@@ -12,6 +12,13 @@
   const FIDO2_BUTTON_SELECTOR = 'form#fido2-form button[type="submit"]';
   const PASSWORD_TAB_SELECTOR = '#password-form-selector';
 
+  // タイミング定数（ms）
+  const DELAY_SUBMIT = 150;
+  const DELAY_FIDO2 = 200;
+  const DELAY_FOCUS = 50;
+  const DELAY_DEBOUNCE = 50;
+  const OBSERVER_TIMEOUT = 30000;
+
   // =====================================================================
   // ストレージヘルパー（sync → local フォールバック）
   // popup.js にも同一実装あり。コンテントスクリプトとポップアップは実行コンテキストが
@@ -87,7 +94,7 @@
     }
 
     // フォームバリデーションやフレームワークの状態更新用イベントを発火
-    inputElement.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    inputElement.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
     inputElement.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
 
     return true;
@@ -140,13 +147,12 @@
     // ボタンが無効化されている場合はスキップ
     if (nextBtn.disabled) return;
 
-    // イベント伝播とフォーム状態更新を待ってからクリック（150ms）
     setTimeout(() => {
       if (!isStepTwo() && !nextBtn.disabled) {
         state.submitted = true;
         nextBtn.click();
       }
-    }, 150);
+    }, DELAY_SUBMIT);
   }
 
   // 「パスワードレス認証」ボタンを自動クリック
@@ -177,15 +183,13 @@
 
     state.fido2ClickScheduled = true;
 
-    // 画面切り替えのアニメーションと初期化待ち（200ms）
-    // クリック成功時のみ fido2Clicked を立てる（失敗時はリトライ可能にする）
     setTimeout(() => {
       state.fido2ClickScheduled = false;
       if (fido2Btn.offsetParent !== null && !fido2Btn.disabled) {
         state.fido2Clicked = true;
         fido2Btn.click();
       }
-    }, 200);
+    }, DELAY_FIDO2);
   }
 
   // 「パスワード」タブを自動選択（FIDO2画面よりパスワード入力を優先）
@@ -235,8 +239,6 @@
 
     state.focusPasswordScheduled = true;
 
-    // フォーカス成功時のみ focusedPassword を立てる（失敗時はリトライ可能にする）
-    // DOM変化を伴わないためここで checkAndStopObserver を呼ぶ
     setTimeout(() => {
       state.focusPasswordScheduled = false;
       if (pwdInput.offsetParent !== null && document.activeElement !== pwdInput) {
@@ -244,7 +246,7 @@
         pwdInput.focus();
       }
       checkAndStopObserver();
-    }, 50);
+    }, DELAY_FOCUS);
   }
 
   // 入力処理（要素を探して入力）
@@ -348,7 +350,7 @@
     debounceTimer = setTimeout(() => {
       debounceTimer = null;
       handleDomChanges();
-    }, 50);
+    }, DELAY_DEBOUNCE);
   }
 
   // DOM監視（動的レンダリング・遅延ロード・画面切り替え対応）
@@ -369,13 +371,12 @@
     // 初回チェック（observer セットアップ後に実行）
     debouncedHandleDomChanges();
 
-    // 安全策: ページロードから30秒後に未停止なら強制停止
     setTimeout(() => {
       if (observer) {
         observer.disconnect();
         observer = null;
       }
-    }, 30000);
+    }, OBSERVER_TIMEOUT);
   }
 
   // 初期化
