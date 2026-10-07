@@ -125,8 +125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const item = inputElement.closest('.option-item');
     if (!item) return;
     item.classList.remove('saved-pulse');
-    void item.offsetWidth; // リフロー強制でアニメーション再トリガー
+    void item.offsetWidth;
     item.classList.add('saved-pulse');
+    item.addEventListener('animationend', () => {
+      item.classList.remove('saved-pulse');
+    }, { once: true });
   }
 
   // 入力欄の保存完了フィードバック演出（枠線の緑発光 & ✓アイコン）
