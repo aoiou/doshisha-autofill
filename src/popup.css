@@ -13,7 +13,6 @@
   --bg-option-hover: #f1f5f9;
   --bg-option-active: #eef2ff;
   --bg-option-active-hover: #e0e7ff;
-  --bg-tag: #e2e8f0;
   --bg-hover-subtle: rgba(0, 0, 0, 0.05);
 
   --border-color: #e2e8f0;
@@ -56,7 +55,6 @@
   --bg-option-hover: rgba(255, 255, 255, 0.04);
   --bg-option-active: rgba(99, 102, 241, 0.06);
   --bg-option-active-hover: rgba(99, 102, 241, 0.09);
-  --bg-tag: rgba(255, 255, 255, 0.06);
   --bg-hover-subtle: rgba(255, 255, 255, 0.08);
 
   --border-color: #334155;
@@ -502,14 +500,6 @@ body {
   font-size: 11px;
   color: var(--text-hint);
   line-height: 1.4;
-}
-
-.form-hint code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: var(--bg-tag);
-  padding: 1px 4px;
-  border-radius: 4px;
-  color: var(--text-code);
 }
 
 /* Options */
