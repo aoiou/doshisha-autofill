@@ -1,8 +1,3 @@
-/**
- * Doshisha Autofill
- * Background Service Worker
- */
-
 const LOGIN_URL = 'https://doshisha.ex-tic.com/auth/session';
 
 // ショートカットキー押下時のハンドラ

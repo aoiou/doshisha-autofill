@@ -350,7 +350,7 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['style', 'class', 'data-step']
+      attributeFilter: ['style', 'class']
     });
 
     // 初回チェック（observer セットアップ後に実行）
